@@ -1,7 +1,12 @@
 FROM alpine:3.19
 
-# Install required packages: bash, postgresql client, tar, gzip, restic
-RUN apk add --no-cache bash postgresql-client tar gzip ca-certificates tzdata curl && \
+# Install required packages and PostgreSQL 17 client
+RUN apk add --no-cache bash tar gzip ca-certificates tzdata curl && \
+    # Add PostgreSQL 17 repository and install client
+    echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache postgresql17-client && \
     # Install restic
     RESTIC_VERSION=0.16.4 && \
     curl -L "https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2" | \
