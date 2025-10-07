@@ -238,6 +238,7 @@ services:
   # This helps manage database connections efficiently and prevents exhaustion during peak activity
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
+    restart: unless-stopped
     environment:
       DATABASES_HOST: ${POSTGRES_HOST}
       DATABASES_PORT: 5432
@@ -249,6 +250,12 @@ services:
       DEFAULT_POOL_SIZE: 25
     ports:
       - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - n8n-network
+      - shark
 
   n8n-backup:
     build:
