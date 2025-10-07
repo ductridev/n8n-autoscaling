@@ -30,8 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y chromium && \
     rm -rf /var/lib/apt/lists/*
 
-# Install n8n and Puppeteer
-RUN npm install -g n8n puppeteer
+# Install n8n, Puppeteer, and additional Puppeteer plugins
+RUN npm install -g n8n puppeteer puppeteer-extra-plugin-user-preferences
 # Add npm global bin to PATH to ensure n8n executable is found
 ENV PATH="/usr/local/lib/node_modules/n8n/bin:$PATH"
 
