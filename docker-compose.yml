@@ -57,7 +57,7 @@ services:
       # DB config
       - DB_TYPE=${DB_TYPE}
       - DB_POSTGRESDB_HOST=${POSTGRES_HOST}
-      - DB_POSTGRESDB_PORT=6432 # Connect via PgBouncer
+      - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
@@ -107,7 +107,7 @@ services:
       # DB config
       - DB_TYPE=${DB_TYPE}
       - DB_POSTGRESDB_HOST=${POSTGRES_HOST}
-      - DB_POSTGRESDB_PORT=6432 # Connect via PgBouncer
+      - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
@@ -157,7 +157,7 @@ services:
       # DB config
       - DB_TYPE=${DB_TYPE}
       - DB_POSTGRESDB_HOST=${POSTGRES_HOST}
-      - DB_POSTGRESDB_PORT=6432 # Connect via PgBouncer
+      - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
@@ -241,28 +241,6 @@ services:
         condition: service_healthy # or service_healthy if you have a healthcheck that passes with 0 initial replicas
     networks:
       - n8n-network
-  # This helps manage database connections efficiently and prevents exhaustion during peak activity
-  pgbouncer:
-    image: pgbouncer/pgbouncer:latest
-    restart: unless-stopped
-    environment:
-      DATABASES_HOST: ${POSTGRES_HOST}
-      DATABASES_PORT: 5432
-      DATABASES_USER: ${POSTGRES_USER}
-      DATABASES_PASSWORD: "${POSTGRES_PASSWORD}"
-      DATABASES_DBNAME: ${POSTGRES_DB}
-      POOL_MODE: transaction
-      MAX_CLIENT_CONN: 100
-      DEFAULT_POOL_SIZE: 25
-      AUTH_TYPE: any
-    ports:
-      - "6432:6432"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - n8n-network
-      - shark
 
   n8n-backup:
     build:
