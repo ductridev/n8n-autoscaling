@@ -76,8 +76,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      pgbouncer:
-        condition: service_started
     networks:
       - n8n-network
       - shark
@@ -125,8 +123,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      pgbouncer:
-        condition: service_started
     networks:
       - n8n-network
       - shark
@@ -172,8 +168,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      pgbouncer:
-        condition: service_started
     networks:
       - n8n-network
       - shark
