@@ -1,8 +1,18 @@
-# n8n Autoscaling System
+# n8n Autoscaling System with Automated Backups
+
+> **Fork of [conor-is-my-name/n8n-autoscaling](https://github.com/conor-is-my-name/n8n-autoscaling)** with enhanced backup capabilities.
 
 NOTE: If you want to use Cloudflared please check the 2nd branch for a more secure installation configuration. https://github.com/conor-is-my-name/n8n-autoscaling/tree/feature/cloudflared
 
 A Docker-based autoscaling solution for n8n workflow automation platform. Dynamically scales worker containers based on Redis queue length.  No need to deal with k8s or any other container scaling provider, a simple script runs it all and is easily configurable.
+
+## 🆕 Enhanced Features in this Fork
+
+- **Automated Daily Backups**: PostgreSQL dumps + n8n data volume backups
+- **Intelligent Retention**: Keep 14 local copies with automatic cleanup
+- **Offsite Storage**: Optional encrypted uploads to S3/Backblaze B2 via restic
+- **Simple Restore**: One-command restore process with interactive prompts
+- **Production Ready**: Comprehensive backup solution in the `backup/` folder
 
 Tested with hundreds of simultaneous executions running on a 8 core 16gb ram VPS.  
 
@@ -20,6 +30,10 @@ graph TD
     B -->|Monitors queue| E[Redis Monitor]
     F[PostgreSQL] -->|Stores data| A
     A -->|Webhooks| G[n8n Webhook]
+    H[Backup Service] -->|Daily backups| F
+    H -->|Backup data| I[n8n Data Volume]
+    H -->|Store locally| J[./backups/]
+    H -->|Optional upload| K[S3/Backblaze B2]
 ```
 
 ## Features
@@ -29,6 +43,10 @@ graph TD
 - Redis queue monitoring
 - Docker Compose-based deployment
 - Health checks for all services
+- **🆕 Automated daily backups** (PostgreSQL + n8n data)
+- **🆕 Intelligent backup retention** (14 local copies)
+- **🆕 Optional offsite storage** (S3/Backblaze B2 via restic)
+- **🆕 One-command restore process**
 
 ## Prerequisites
 
@@ -37,17 +55,27 @@ graph TD
 
 ## Quick Start
 
-1. Copy or Clone this repository to a folder of your choice
+1. Clone this enhanced repository:
+   ```bash
+   git clone https://github.com/ductridev/n8n-autoscaling.git
+   cd n8n-autoscaling
+   ```
 2. Rename .env.example to .env
 3. Configure your environment variables in the .env file - defaults are good to go, but set new passwords and tokens.
-4. Run:
+4. Create backup directory:
    ```bash
-   docker network create shark
+   mkdir -p ./backups
    ```
 5. Run:
    ```bash
+   docker network create shark
+   ```
+6. Run:
+   ```bash
    docker compose up -d
    ```
+
+The backup service will automatically start and create daily backups in `./backups/`.
 
 We create the shark external network in step 4 to make it easier to plug in other containers later.  If you don't want to do this, you can comment out the shark network in the docker compose file.  
 
@@ -80,6 +108,24 @@ Ensure these n8n environment variables are set:
 - `QUEUE_BULL_REDIS_HOST=redis`
 - `QUEUE_HEALTH_CHECK_ACTIVE=true`
 
+### 🆕 Backup Configuration
+
+Additional backup environment variables in `.env`:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `BACKUP_KEEP` | Number of local backups to retain | 14 |
+| `BACKUP_SLEEP_SECONDS` | Backup interval in seconds | 86400 (24h) |
+| `RESTIC_ENABLED` | Enable offsite backups | false |
+| `RESTIC_REPOSITORY` | Restic repository URL | - |
+| `RESTIC_PASSWORD` | Encryption password | - |
+| `AWS_ACCESS_KEY_ID` | S3 access key (if using S3) | - |
+| `AWS_SECRET_ACCESS_KEY` | S3 secret key (if using S3) | - |
+| `B2_ACCOUNT_ID` | Backblaze account ID (if using B2) | - |
+| `B2_ACCOUNT_KEY` | Backblaze account key (if using B2) | - |
+
+See `backup/README.md` for detailed setup instructions.
+
 ## Scaling Behavior
 
 The autoscaler:
@@ -98,6 +144,38 @@ The system includes:
 - Redis queue monitor service (`redis-monitor`)
 - Docker health checks for all services
 - Detailed logging from autoscaler
+- **🆕 Backup service monitoring** (`n8n-backup`)
+
+## 🆕 Backup & Restore
+
+### Automated Backups
+- **Daily automated backups** of PostgreSQL database and n8n data volume
+- **Local retention**: Keeps 14 copies, automatically deletes older ones
+- **Timestamped archives**: `n8n-backup-YYYYMMDDTHHMMSSZ.tar.gz`
+- **Optional offsite storage**: Encrypted uploads to S3/Backblaze B2
+
+### Manual Backup
+```bash
+# Test backup system
+docker compose run --rm n8n-backup /usr/local/bin/backup.sh
+
+# Check backup files
+ls -la ./backups/
+```
+
+### Simple Restore Process
+```bash
+# 1. Stop services
+docker compose stop
+
+# 2. Restore from backup
+docker compose run --rm n8n-backup /usr/local/bin/restore.sh /backups/n8n-backup-TIMESTAMP.tar.gz
+
+# 3. Start services
+docker compose up -d
+```
+
+For detailed backup configuration and offsite storage setup, see [`backup/README.md`](backup/README.md).
 
 ## Troubleshooting
 
@@ -108,6 +186,18 @@ The system includes:
 Webhook URL example:
 Webhooks use your docker service name not local host, example:
 http://n8n-webhook:5678/webhook/d7e73b77-6cfb-4add-b454-41e4c91461d8
+
+## Contributing
+
+This is a fork of the original [n8n-autoscaling](https://github.com/conor-is-my-name/n8n-autoscaling) project with enhanced backup capabilities. 
+
+**Backup improvements include:**
+- Complete automated backup solution in `backup/` folder
+- PostgreSQL + n8n data volume backups
+- Intelligent retention policies
+- Optional encrypted offsite storage via restic
+- One-command restore process
+- Production-ready deployment
 
 ## License
 
