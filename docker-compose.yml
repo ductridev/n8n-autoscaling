@@ -76,6 +76,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      pgbouncer:
+        condition: service_started
     networks:
       - n8n-network
       - shark
@@ -123,6 +125,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      pgbouncer:
+        condition: service_started
     networks:
       - n8n-network
       - shark
@@ -168,6 +172,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      pgbouncer:
+        condition: service_started
     networks:
       - n8n-network
       - shark
@@ -243,11 +249,12 @@ services:
       DATABASES_HOST: ${POSTGRES_HOST}
       DATABASES_PORT: 5432
       DATABASES_USER: ${POSTGRES_USER}
-      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASES_PASSWORD: "${POSTGRES_PASSWORD}"
       DATABASES_DBNAME: ${POSTGRES_DB}
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 100
       DEFAULT_POOL_SIZE: 25
+      AUTH_TYPE: any
     ports:
       - "6432:6432"
     depends_on:
