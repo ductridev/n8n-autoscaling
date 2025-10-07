@@ -229,7 +229,59 @@ services:
       redis:
         condition: service_healthy
       n8n-worker: # Ensure worker service is defined, though it might start with 0 replicas if autoscaled from 0
-        condition: service_started # or service_healthy if you have a healthcheck that passes with 0 initial replicas
+        condition: service_healthy # or service_healthy if you have a healthcheck that passes with 0 initial replicas
+    networks:
+      - n8n-network
+  # This helps manage database connections efficiently and prevents exhaustion during peak activity
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    environment:
+      DATABASES_HOST: ${POSTGRES_HOST}
+      DATABASES_PORT: 5432
+      DATABASES_USER: ${POSTGRES_USER}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASES_DBNAME: ${POSTGRES_DB}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: 25
+    ports:
+      - "6432:6432"
+
+  n8n-backup:
+    build:
+      context: ./backup
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_DATA_PATH=/n8n
+      - BACKUP_DIR=/backups
+      - KEEP=${BACKUP_KEEP:-14}
+      - SLEEP_SECONDS=${BACKUP_SLEEP_SECONDS:-86400}
+      # Optional restic configuration
+      - RESTIC_ENABLED=${RESTIC_ENABLED:-false}
+      - RESTIC_REPOSITORY=${RESTIC_REPOSITORY}
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
+      - RESTIC_RETENTION_DAILY=${RESTIC_RETENTION_DAILY:-14}
+      - RESTIC_RETENTION_WEEKLY=${RESTIC_RETENTION_WEEKLY:-8}
+      - RESTIC_RETENTION_MONTHLY=${RESTIC_RETENTION_MONTHLY:-6}
+      - RESTIC_RETENTION_YEARLY=${RESTIC_RETENTION_YEARLY:-2}
+      # S3 credentials (if using S3)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      # Backblaze B2 credentials (if using B2)
+      - B2_ACCOUNT_ID=${B2_ACCOUNT_ID}
+      - B2_ACCOUNT_KEY=${B2_ACCOUNT_KEY}
+    volumes:
+      - ./backups:/backups
+      - n8n_main:/n8n:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - n8n-network
 
