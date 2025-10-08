@@ -85,6 +85,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 60s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
       
   n8n-webhook:
     build:
@@ -126,6 +128,8 @@ services:
     networks:
       - n8n-network
       - shark
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   n8n-worker:
     build:
@@ -176,6 +180,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   redis-monitor:
     build:
